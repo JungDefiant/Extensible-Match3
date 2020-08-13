@@ -13,13 +13,13 @@ public class BlockManager
     const float dragDeadzone = 0.05f;
 
     public float SliderSpeed { get; set; }
+    public MonsterBlock CurrentMonster { get; set; }
 
     private Transform slider;
     private Transform boardParent;
     private BoardManager boardManager;
     private InputManager inputManager;
     private GraphicRaycaster raycaster;
-    private MonsterBlock currentMonster;
     private MonsterBlock[] currentMonsters;
 
     private Vector2 dragNormal = Vector2.zero;
@@ -35,33 +35,69 @@ public class BlockManager
         int smallestBoardDimension = boardManager.boardWidth < boardManager.boardHeight ? boardManager.boardWidth : boardManager.boardHeight;
         currentMonsters = new MonsterBlock[smallestBoardDimension];
     }
-
-    public IEnumerator HandleInput()
+    
+    public IEnumerator CombineMonsters(List<Tile[]> allMatches)
     {
-        if (inputManager.CheckInputUp()) ConfirmMove();
-        else if (inputManager.CheckInputDown()) currentMonster = GetMonsterAtPosition(); 
-        else if (inputManager.CheckInput() && currentMonster != null) DragSelectedBlocks();
+        foreach (var match in allMatches)
+        {
+            Tile middleTile = match[0];
+            bool allReachedDest = false;
 
-        yield return new WaitForSeconds(0.1f);
+            for (int i = 1; i < match.Length; i++)
+            {
+                Debug.Log(match[i]);
+                MonsterBlock nextMonster = match[i].Monster;
+                match[i].Monster = null;
+                nextMonster.SetTileCoordinates(middleTile.Coordinates);
+                nextMonster.MoveBlockToTileCoord(boardManager);
+            }
+
+            while (!allReachedDest)
+            {
+                if (GetMonstersAtPosition(middleTile.Coordinates).Length == match.Length)
+                {
+                    allReachedDest = true;
+                }
+                else yield return new WaitForSeconds(0.1f);
+            }
+
+            foreach(var monster in GetMonstersAtPosition(middleTile.Coordinates))
+            {
+                monster.gameObject.SetActive(false);
+                middleTile.Monster = null;
+            }
+        }
     }
 
-    private MonsterBlock GetMonsterAtPosition()
+    public MonsterBlock GetMonsterAtPosition(Vector2 position)
     {
         PointerEventData pointerEventData = new PointerEventData(EventSystem.current);
-        pointerEventData.position = inputManager.GetPointerPos();
+        pointerEventData.position = position;
 
         List<RaycastResult> raycasts = new List<RaycastResult>();
 
         raycaster.Raycast(pointerEventData, raycasts);
-
-        Debug.Log(raycasts[0].gameObject.name);
 
         return raycasts.Where(x => x.gameObject.GetComponent<MonsterBlock>() != null)
                        .Select(x => x.gameObject.GetComponent<MonsterBlock>())
                        .First();
     }
 
-    private void DragSelectedBlocks()
+    public MonsterBlock[] GetMonstersAtPosition(Vector2 position)
+    {
+        PointerEventData pointerEventData = new PointerEventData(EventSystem.current);
+        pointerEventData.position = position;
+
+        List<RaycastResult> raycasts = new List<RaycastResult>();
+
+        raycaster.Raycast(pointerEventData, raycasts);
+
+        return raycasts.Where(x => x.gameObject.GetComponent<MonsterBlock>() != null)
+                       .Select(x => x.gameObject.GetComponent<MonsterBlock>())
+                       .ToArray();
+    }
+
+    public void DragSelectedBlocks()
     {
         if (dragNormal != Vector2.zero)
         {
@@ -84,7 +120,7 @@ public class BlockManager
 
     private void AddMonstersToSlider()
     {
-        MonsterBlock[] monsterBlocks = boardManager.GetTilesInRowOrColumn(currentMonster.transform.localPosition, dragNormal)
+        MonsterBlock[] monsterBlocks = boardManager.GetTilesInRowOrColumn(CurrentMonster.transform.localPosition, dragNormal)
                                                    .Where(x => x.Monster != null)
                                                    .Select(x => x.Monster)
                                                    .ToArray();
@@ -106,7 +142,7 @@ public class BlockManager
 
     }
 
-    private bool ConfirmMove()
+    public bool ConfirmMove()
     {
         dragNormal = Vector2.zero;
 

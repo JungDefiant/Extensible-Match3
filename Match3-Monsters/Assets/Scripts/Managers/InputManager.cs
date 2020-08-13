@@ -1,21 +1,25 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public enum InputMode { Move, Wait }
 
 public class InputManager
 {
     public InputMode InputMode { get; set; }
+    public BlockManager blockManager { get; set; }
     public IControllerInput ControllerInput { get; private set; }
 
-    public InputManager()
+    public IEnumerator HandleInput()
     {
-        #if UNITY_EDITOR
-            ControllerInput = new InputSettingsWindows();
-        #endif
+        if (CheckInputUp())
+        {
+            blockManager.ConfirmMove();
+            InputMode = InputMode.Wait;
+        }
+        else if (CheckInputDown()) blockManager.CurrentMonster = blockManager.GetMonsterAtPosition(GetPointerPos());
+        else if (CheckInput() && blockManager.CurrentMonster != null) blockManager.DragSelectedBlocks();
 
-        #if UNITY_ANDROID
-            ControllerInput = new InputSettingsAndroid();
-        #endif
+        yield return new WaitForSeconds(0.1f);
     }
 
     public bool CheckInputUp() => ControllerInput.OnInputUp() 

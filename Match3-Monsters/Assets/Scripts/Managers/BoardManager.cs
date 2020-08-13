@@ -18,7 +18,7 @@ public class BoardManager
         Board = new Board(new Tile[boardWidth, boardHeight]);
     }
 
-    public void PopulateBoard(MonsterBlock prefab, Transform parent)
+    public void PopulateBoard(MonsterBlock prefab, MonsterType[] monsterTypes, Transform parent)
     {
         for (int x = 0; x < Board.Tiles.GetLength(0); x++)
         {
@@ -32,6 +32,7 @@ public class BoardManager
                 Board.Tiles[x, y] = new Tile(coords);
                 Board.Tiles[x, y].Monster = Object.Instantiate(prefab, parent);
                 Board.Tiles[x, y].Monster.SetPosition(coords);
+                Board.Tiles[x, y].Monster.MonsterType = monsterTypes[Random.Range(0, monsterTypes.Length)];
             }
         }
     }

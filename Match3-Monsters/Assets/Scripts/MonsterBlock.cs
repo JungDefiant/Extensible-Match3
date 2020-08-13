@@ -33,6 +33,11 @@ public class MonsterBlock : MonoBehaviour
         TileCoordinates = BoardManager.CoordsToVectorInt(Coordinates);
     }
 
+    public void SetTileCoordinates(Vector2 Coordinates)
+    {
+        TileCoordinates = BoardManager.CoordsToVectorInt(Coordinates);
+    }
+
     public void MoveBlockToTileCoord(BoardManager boardManager)
     {
         StartCoroutine("MoveBlockToTile", boardManager);

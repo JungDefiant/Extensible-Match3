@@ -9,25 +9,29 @@ using UnityEngine;
 public class MatchManager
 {
     private BoardManager boardManager;
+    private BlockManager blockManager;
     private Board board;
     private int minMatch;
 
-    public MatchManager(BoardManager boardManager, int minMatch = 3)
+    public MatchManager(BoardManager boardManager, BlockManager blockManager, int minMatch = 3)
     {
         this.boardManager = boardManager;
+        this.blockManager = blockManager;
         this.minMatch = minMatch;
         board = boardManager.Board;
     }
 
     public IEnumerator CheckMatch()
     {
-        List<List<Tile>> allMatches = new List<List<Tile>>();
+        List<Tile[]> allMatches = new List<Tile[]>();
         SearchMatchesOnBoard(allMatches);
-        
-        yield return null;
+        if(allMatches.Count > 0)
+        {
+            yield return blockManager.CombineMonsters(allMatches);
+        }
     }
 
-    private void SearchMatchesOnBoard(List<List<Tile>> allMatches)
+    private void SearchMatchesOnBoard(List<Tile[]> allMatches)
     {
         for (int x = 0; x < board.Tiles.GetLength(0); x++)
         {
@@ -38,7 +42,7 @@ public class MatchManager
         }
     }
 
-    private void CollectMatches(List<List<Tile>> allMatches, Tile tile)
+    private void CollectMatches(List<Tile[]> allMatches, Tile tile)
     {
         List<Tile> match = new List<Tile>();
         Vector2Int tileLoc = BoardManager.CoordsToVectorInt(tile.Coordinates);
@@ -49,16 +53,19 @@ public class MatchManager
         CollectMatchesHorizontal(tile, tileLoc, match);
         CollectMatchesVertical(tile, tileLoc, match);
 
-        if (match.Count < minMatch)
+        Tile[] matchArray = match.Where(x => x != null)
+                                 .ToArray();
+
+        if (matchArray.Length < minMatch)
         {
-            foreach (Tile t in match)
+            foreach (Tile t in matchArray)
             {
                 t.Monster.IsMatched = false;
             }
         }
         else
         {
-            allMatches.Add(match);
+            allMatches.Add(matchArray);
         }
     }
 
@@ -96,6 +103,9 @@ public class MatchManager
             }
             else break;
         }
+
+        horzMatches = horzMatches.Where(x => x != null)
+                                 .ToArray();
 
         if (horzMatches.Length < minMatch)
         {
@@ -145,6 +155,9 @@ public class MatchManager
             else break;
         }
 
+        vertMatches = vertMatches.Where(x => x != null)
+                                 .ToArray();
+
         if (vertMatches.Length < minMatch)
         {
             foreach (Tile t in vertMatches)
@@ -157,4 +170,5 @@ public class MatchManager
             match.AddRange(vertMatches);
         }
     }
+    
 }

@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Transform slider;
     [SerializeField] private MonsterBlock blockPrefab;
     [SerializeField] private float sliderSpeed;
+    [SerializeField] private MonsterType[] allTypes;
 
     private bool gameStart = true;
 
@@ -24,14 +25,14 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         BoardManager = new BoardManager();
-        BoardManager.PopulateBoard(blockPrefab, transform);
+        BoardManager.PopulateBoard(blockPrefab, allTypes, transform);
 
         InputManager = new InputManager();
 
         BlockManager = new BlockManager(BoardManager, InputManager, canvas.GetComponent<GraphicRaycaster>(), slider, transform);
         BlockManager.SliderSpeed = sliderSpeed;
 
-        MatchManager = new MatchManager(BoardManager);
+        MatchManager = new MatchManager(BoardManager, BlockManager);
     }
 
     private void Start()
@@ -41,10 +42,17 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator Game()
     {
-        while(gameStart)
+        InputManager.InputMode = InputMode.Wait;
+        yield return MatchManager.CheckMatch();
+        InputManager.InputMode = InputMode.Move;
+
+        while (gameStart)
         {
-            yield return BlockManager.HandleInput();
-            yield return MatchManager.CheckMatch();
+            yield return InputManager.HandleInput();
+            if (InputManager.InputMode == InputMode.Wait) {
+                yield return MatchManager.CheckMatch();
+                InputManager.InputMode = InputMode.Move;
+            }
             yield return new WaitForSeconds(0.1f);
         }
     }
