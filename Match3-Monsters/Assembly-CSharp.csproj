@@ -73,8 +73,10 @@
     <Compile Include="Assets\Scripts\Managers\InputManager.cs" />
     <Compile Include="Assets\Scripts\Managers\MatchManager.cs" />
     <Compile Include="Assets\Scripts\Managers\MonsterManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\RaycastGetter.cs" />
     <Compile Include="Assets\Scripts\MonsterBlock.cs" />
     <Compile Include="Assets\Scripts\MonsterType.cs" />
+    <Compile Include="Assets\Scripts\TileSlider.cs" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>C:/Users/bjhab/Documents/GitHub/Match-3/Match3-Monsters/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>

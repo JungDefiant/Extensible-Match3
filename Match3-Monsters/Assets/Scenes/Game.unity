@@ -425,6 +425,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 456071006}
+  - component: {fileID: 456071007}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -451,6 +452,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &456071007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 456071005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dc5af06e0912b44c92ac7a357d67d44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &478152536
 GameObject:
   m_ObjectHideFlags: 0
@@ -534,7 +547,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 478152539}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 684178740}
+        m_MethodName: RestartGame
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &478152539
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -766,7 +790,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 260, y: 260}
+  m_SizeDelta: {x: 255, y: 255}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &684178737
 MonoBehaviour:
@@ -829,7 +853,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canvas: {fileID: 1894295739}
-  slider: {fileID: 456071006}
+  slider: {fileID: 456071007}
   blockPrefab: {fileID: 3808661847276876528, guid: e566f1e9f81d3e9418d51fecff140526,
     type: 3}
   sliderSpeed: 15
@@ -1678,7 +1702,7 @@ PrefabInstance:
     - target: {fileID: 6883818042906582643, guid: e566f1e9f81d3e9418d51fecff140526,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 128.06
       objectReference: {fileID: 0}
     - target: {fileID: 6883818042906582643, guid: e566f1e9f81d3e9418d51fecff140526,
         type: 3}

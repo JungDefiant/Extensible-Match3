@@ -1,18 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private Canvas canvas;
-    [SerializeField] private Transform slider;
+    [SerializeField] private TileSlider slider;
     [SerializeField] private MonsterBlock blockPrefab;
     [SerializeField] private float sliderSpeed;
     [SerializeField] private MonsterType[] allTypes;
 
     private bool gameStart = true;
-
     public MatchManager MatchManager { get; private set; }
     public BlockManager BlockManager { get; private set; }
     public InputManager InputManager { get; private set; }
@@ -24,13 +24,16 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void Awake()
     {
-        BoardManager = new BoardManager();
-        BoardManager.PopulateBoard(blockPrefab, allTypes, transform);
+        BoardManager = new BoardManager(blockPrefab, allTypes, transform);
+        BoardManager.PopulateBoard();
 
-        InputManager = new InputManager();
+        slider.Speed = sliderSpeed;
+        slider.TileLocation = new Vector2Int(0, 0);
 
-        BlockManager = new BlockManager(BoardManager, InputManager, canvas.GetComponent<GraphicRaycaster>(), slider, transform);
-        BlockManager.SliderSpeed = sliderSpeed;
+        BlockManager = new BlockManager(BoardManager, canvas.GetComponent<GraphicRaycaster>(), slider, transform);
+
+        InputManager = new InputManager(BlockManager);
+        SetControllerInput();
 
         MatchManager = new MatchManager(BoardManager, BlockManager);
     }
@@ -43,18 +46,29 @@ public class GameManager : MonoBehaviour
     private IEnumerator Game()
     {
         InputManager.InputMode = InputMode.Wait;
-        yield return MatchManager.CheckMatch();
+        //yield return MatchManager.CheckMatch();
         InputManager.InputMode = InputMode.Move;
 
         while (gameStart)
         {
             yield return InputManager.HandleInput();
-            if (InputManager.InputMode == InputMode.Wait) {
-                yield return MatchManager.CheckMatch();
-                InputManager.InputMode = InputMode.Move;
-            }
-            yield return new WaitForSeconds(0.1f);
+            //if(InputManager.InputMode == InputMode.Wait) yield return MatchManager.CheckMatch();
+            InputManager.InputMode = InputMode.Move;
         }
+    }
+
+    private void SetControllerInput()
+    {
+        #if UNITY_EDITOR
+            InputManager.ControllerInput = new InputSettingsWindows();
+        #elif UNITY_ANDROID
+            InputManager.ControllerInput = new InputSettingsAndroid();
+        #endif
+    }
+
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(0);
     }
 
     /*
@@ -69,10 +83,10 @@ public class GameManager : MonoBehaviour
      * 4. Method that moves monster blocks to location [DONE]
      * 
      * MatchManager
-     * 5. Method that checks matches on board
-     * 6. Method that combines monsters into a match
+     * 5. Method that checks matches on board [DONE]
+     * 6. Method that combines monsters into a match [DONE]
      * 7. Method that moves all monsters down to fill empty tiles
-     * 8. Method that respawns monsters in remaining tiles
+     * 8. Method that respawns monsters in remaining tiles [DONE]
      * 
      * TO DO [Data]:
      * 1. Update score whenever monster match is made

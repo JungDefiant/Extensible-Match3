@@ -12,29 +12,16 @@ public class BoardManager
     public const float boardStep = 48f;
 
     public Board Board { get; private set; }
+    public MonsterBlock MonsterPrefab { get; private set; }
+    public MonsterType[] MonsterTypes { get; private set; }
+    public Transform BoardParent { get; private set; }
 
-    public BoardManager()
+    public BoardManager(MonsterBlock prefab, MonsterType[] monsterTypes, Transform parent)
     {
         Board = new Board(new Tile[boardWidth, boardHeight]);
-    }
-
-    public void PopulateBoard(MonsterBlock prefab, MonsterType[] monsterTypes, Transform parent)
-    {
-        for (int x = 0; x < Board.Tiles.GetLength(0); x++)
-        {
-            float xPos = (x * boardStep) + boardRoot.x;
-
-            for (int y = 0; y < Board.Tiles.GetLength(1); y++)
-            {
-                float yPos = (y * boardStep) + boardRoot.y;
-                Vector2 coords = new Vector2(xPos, yPos);
-
-                Board.Tiles[x, y] = new Tile(coords);
-                Board.Tiles[x, y].Monster = Object.Instantiate(prefab, parent);
-                Board.Tiles[x, y].Monster.SetPosition(coords);
-                Board.Tiles[x, y].Monster.MonsterType = monsterTypes[Random.Range(0, monsterTypes.Length)];
-            }
-        }
+        MonsterPrefab = prefab;
+        MonsterTypes = monsterTypes;
+        BoardParent = parent;
     }
 
     public static Vector2Int CoordsToVectorInt(Vector2 coord)
@@ -43,6 +30,60 @@ public class BoardManager
         int yCoord = Mathf.RoundToInt((coord.y - boardRoot.y) / boardStep);
 
         return new Vector2Int(xCoord, yCoord);
+    }
+
+    public static Vector2 VectorIntToCoords(Vector2Int coord)
+    {
+        float xCoord = (coord.x * boardStep) + boardRoot.x;
+        float yCoord = (coord.y * boardStep) + boardRoot.x;
+
+        return new Vector2(xCoord, yCoord);
+    }
+
+    public void PopulateBoard()
+    {
+        Vector2Int tileCoord = new Vector2Int(0, 0);
+
+        for (int x = 0; x < Board.Tiles.GetLength(0); x++)
+        {
+            for (int y = 0; y < Board.Tiles.GetLength(1); y++)
+            {
+                tileCoord.Set(x, y);
+                Vector2 coords = VectorIntToCoords(tileCoord);
+
+                Board.Tiles[x, y] = new Tile(coords);
+                Board.Tiles[x, y].Monster = Object.Instantiate(MonsterPrefab, BoardParent);
+                Board.Tiles[x, y].Monster.SetPosition(coords);
+                MonsterType type = MonsterTypes[Random.Range(0, MonsterTypes.Length)];
+                Board.Tiles[x, y].Monster.SetMonsterType(type);
+            }
+        }
+    }
+
+    public IEnumerator RepopulateBoard()
+    {
+        float ySpawnPos = boardStep * ((boardHeight / 2) + 1);
+        Vector2Int tileCoord = new Vector2Int(0, 0);
+
+        for (int x = 0; x < Board.Tiles.GetLength(0); x++)
+        {
+
+            for (int y = 0; y < Board.Tiles.GetLength(1); y++)
+            {
+                if (Board.Tiles[x, y].Monster == null)
+                {
+                    tileCoord.Set(x, y);
+                    Vector2 coords = VectorIntToCoords(tileCoord);
+
+                    Board.Tiles[x, y].Monster = Object.Instantiate(MonsterPrefab, BoardParent);
+                    Board.Tiles[x, y].Monster.SetPosition(coords);
+                    MonsterType type = MonsterTypes[Random.Range(0, MonsterTypes.Length)];
+                    Board.Tiles[x, y].Monster.SetMonsterType(type);
+                }
+            }
+        }
+
+        yield return new WaitForEndOfFrame();
     }
 
     public Tile[] GetTilesInRowOrColumn(Vector2 origin, Vector2 direction)
@@ -63,4 +104,16 @@ public class BoardManager
 
         return tiles.ToArray();
     }
+
+    /*
+     * Board set up breakdown:
+     * 1. Fill every other tile with a random monster
+     * 2. Check the other tiles that there isn't a matching monster horizontally or vertically
+     * 
+     */
+
+    //private int CountAdjacentSimilarMonsters(int tileXCoord, int tileYCoord)
+    //{
+        
+    //}
 }

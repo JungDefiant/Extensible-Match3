@@ -87,7 +87,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc9c6b2edaf85b648a81a624065256e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 30
+  moveSpeed: 8
+  destRange: 0.01
   image: {fileID: 6883818042932398020}
 --- !u!1 &6883818042932398022
 GameObject:

@@ -11,90 +11,71 @@ using UnityEngine.UI;
 public class BlockManager
 {
     const float dragDeadzone = 0.05f;
+    const float offboardThresholdFactor = 0.7f;
 
-    public float SliderSpeed { get; set; }
+    public TileSlider Slider { get; set; }
     public MonsterBlock CurrentMonster { get; set; }
+    public RaycastGetter Raycaster { get; set; }
 
-    private Transform slider;
     private Transform boardParent;
     private BoardManager boardManager;
-    private InputManager inputManager;
-    private GraphicRaycaster raycaster;
-    private MonsterBlock[] currentMonsters;
-
     private Vector2 dragNormal = Vector2.zero;
 
-    public BlockManager(BoardManager boardManager, InputManager inputManager, GraphicRaycaster raycaster, Transform slider, Transform boardParent)
+    public BlockManager(BoardManager boardManager, GraphicRaycaster raycaster, TileSlider slider, Transform boardParent)
     {
         this.boardManager = boardManager;
-        this.inputManager = inputManager;
-        this.raycaster = raycaster;
-        this.slider = slider;
         this.boardParent = boardParent;
 
-        int smallestBoardDimension = boardManager.boardWidth < boardManager.boardHeight ? boardManager.boardWidth : boardManager.boardHeight;
-        currentMonsters = new MonsterBlock[smallestBoardDimension];
+        Slider = slider;
+
+        Raycaster = new RaycastGetter(raycaster);
     }
     
     public IEnumerator CombineMonsters(List<Tile[]> allMatches)
     {
         foreach (var match in allMatches)
         {
-            Tile middleTile = match[0];
+            MonsterBlock[] allMonsters = new MonsterBlock[match.Length];
+            Tile middleTile = match[match.Length / 2];
             bool allReachedDest = false;
 
-            for (int i = 1; i < match.Length; i++)
+            for (int i = 0; i < match.Length; i++)
             {
-                Debug.Log(match[i]);
-                MonsterBlock nextMonster = match[i].Monster;
+                Debug.Log("Next Monster: " + match[i].Monster);
+                Debug.Log("Middle Tile: " + middleTile);
+                allMonsters[i] = match[i].Monster;
                 match[i].Monster = null;
-                nextMonster.SetTileCoordinates(middleTile.Coordinates);
-                nextMonster.MoveBlockToTileCoord(boardManager);
+                allMonsters[i].SetTileCoordinates(middleTile.Coordinates);
+                allMonsters[i].MoveBlockToTileCoord(boardManager);
             }
 
             while (!allReachedDest)
             {
-                if (GetMonstersAtPosition(middleTile.Coordinates).Length == match.Length)
+                yield return new WaitForSeconds(0.01f);
+
+                allReachedDest = true;
+
+                foreach (var monster in allMonsters)
                 {
-                    allReachedDest = true;
+                    if (!monster.HasReachedDest(middleTile.Coordinates))
+                    {
+                        allReachedDest = false;
+                        break;
+                    }
                 }
-                else yield return new WaitForSeconds(0.1f);
+
+                Debug.Log("Reached Dest? " + allReachedDest);
             }
 
-            foreach(var monster in GetMonstersAtPosition(middleTile.Coordinates))
+            foreach(var monster in allMonsters)
             {
-                monster.gameObject.SetActive(false);
                 middleTile.Monster = null;
+                UnityEngine.Object.Destroy(monster.gameObject);
+                Debug.Log("Combined!");
             }
         }
-    }
 
-    public MonsterBlock GetMonsterAtPosition(Vector2 position)
-    {
-        PointerEventData pointerEventData = new PointerEventData(EventSystem.current);
-        pointerEventData.position = position;
-
-        List<RaycastResult> raycasts = new List<RaycastResult>();
-
-        raycaster.Raycast(pointerEventData, raycasts);
-
-        return raycasts.Where(x => x.gameObject.GetComponent<MonsterBlock>() != null)
-                       .Select(x => x.gameObject.GetComponent<MonsterBlock>())
-                       .First();
-    }
-
-    public MonsterBlock[] GetMonstersAtPosition(Vector2 position)
-    {
-        PointerEventData pointerEventData = new PointerEventData(EventSystem.current);
-        pointerEventData.position = position;
-
-        List<RaycastResult> raycasts = new List<RaycastResult>();
-
-        raycaster.Raycast(pointerEventData, raycasts);
-
-        return raycasts.Where(x => x.gameObject.GetComponent<MonsterBlock>() != null)
-                       .Select(x => x.gameObject.GetComponent<MonsterBlock>())
-                       .ToArray();
+        allMatches.Clear();
     }
 
     public void DragSelectedBlocks()
@@ -102,7 +83,7 @@ public class BlockManager
         if (dragNormal != Vector2.zero)
         {
             MoveSlider();
-            CheckIfOffBoard();
+            CheckIfOffBoard(dragNormal);
         }
         else
         {
@@ -125,36 +106,123 @@ public class BlockManager
                                                    .Select(x => x.Monster)
                                                    .ToArray();
 
-        foreach (var block in monsterBlocks) block.transform.SetParent(slider);
+        foreach (var block in monsterBlocks)
+        {
+            block.StopAllCoroutines();
+            block.SetPosition(BoardManager.VectorIntToCoords(block.TileCoordinates));
+            block.transform.SetParent(Slider.transform);
+        }
+
+        Slider.transform.localPosition = Vector2.zero;
     }
 
     private void MoveSlider()
     {
-        Vector2 moveVector = dragNormal.x > 0 ? 
-            SliderSpeed * dragNormal * Input.GetAxis("Mouse X") :
-            SliderSpeed * dragNormal * Input.GetAxis("Mouse Y");
+        Vector2 moveVector = dragNormal.x > 0 ?
+            Slider.Speed * dragNormal * Input.GetAxis("Mouse X") :
+            Slider.Speed * dragNormal * Input.GetAxis("Mouse Y");
 
-        slider.Translate(moveVector, slider.parent);
+        Slider.transform.Translate(moveVector, Slider.transform.parent);
     }
 
-    private void CheckIfOffBoard()
-    {
-
-    }
-
-    public bool ConfirmMove()
+    public void ConfirmMove()
     {
         dragNormal = Vector2.zero;
 
-        while(slider.childCount > 0)
+        while (Slider.transform.childCount > 0)
         {
-            foreach (Transform child in slider)
+            foreach (Transform child in Slider.transform)
             {
+                MonsterBlock monster = child.GetComponent<MonsterBlock>();
+                monster.SetTileCoordinates(child.localPosition);
                 child.SetParent(boardParent);
-                child.GetComponent<MonsterBlock>().MoveBlockToTileCoord(boardManager);
+                monster.MoveBlockToTileCoord(boardManager);
             }
         }
+    }
 
-        return false;
+    private void ResetSliderPosition(Vector2 normal)
+    {
+        float xThreshold = (BoardManager.boardStep * offboardThresholdFactor * normal.x) - (BoardManager.boardStep * normal.x);
+        float yThreshold = (BoardManager.boardStep * offboardThresholdFactor * normal.y) - (BoardManager.boardStep  * normal.y);
+
+        Debug.Log($"{xThreshold} , {yThreshold}");
+
+        Slider.transform.localPosition = new Vector2(xThreshold, yThreshold);
+    }
+    
+    private void CheckIfOffBoard(Vector2 direction)
+    {
+        float xThreshold = BoardManager.boardStep * offboardThresholdFactor;
+        float yThreshold = BoardManager.boardStep * offboardThresholdFactor;
+
+        float xPos = Slider.transform.localPosition.x;
+        float yPos = Slider.transform.localPosition.y;
+
+        if (xPos > xThreshold || yPos > yThreshold)
+        {
+            RotateMonstersOnSlider(true, direction);
+            Debug.Log("Upper threshold");
+        }
+        else if (xPos < -xThreshold || yPos < -yThreshold)
+        {
+            RotateMonstersOnSlider(false, direction);
+            Debug.Log("Lower threshold");
+        }
+    }
+
+    private void RotateMonstersOnSlider(bool isStart, Vector2 normal)
+    {
+        normal.Normalize();
+
+        Transform parent = Slider.transform;
+        int xStep = Mathf.RoundToInt(normal.x);
+        int yStep = Mathf.RoundToInt(normal.y);
+
+        if (isStart) parent.GetChild(parent.childCount - 1).SetAsFirstSibling();
+        else
+        {
+            xStep *= -1;
+            yStep *= -1;
+
+            parent.GetChild(0).SetAsLastSibling();
+        }
+
+        float childXPos;
+        float childYPos;
+
+        for (int i = 0; i < parent.childCount * normal.x; i++)
+        {
+            Transform child = parent.GetChild(i);
+
+            Debug.Log(child.GetSiblingIndex());
+
+            childXPos = (BoardManager.boardStep * i) + BoardManager.boardRoot.x;
+
+            child.localPosition = new Vector2(childXPos, child.localPosition.y);
+        }
+
+        for (int j = 0; j < parent.childCount * normal.y; j++)
+        {
+            Transform child = parent.GetChild(j);
+
+            Debug.Log(child.GetSiblingIndex());
+
+            childYPos = (BoardManager.boardStep * j) + BoardManager.boardRoot.y;
+
+            child.localPosition = new Vector2(child.localPosition.x, childYPos);
+        }
+
+        int sliderXTilePos = Mathf.RoundToInt(Slider.TileLocation.x + xStep);
+        int sliderYTilePos = Mathf.RoundToInt(Slider.TileLocation.y + yStep);
+
+        if (sliderXTilePos > boardManager.boardWidth) sliderXTilePos = 0;
+        else if (sliderXTilePos < 0) sliderXTilePos = boardManager.boardWidth - 1;
+
+        if (sliderYTilePos > boardManager.boardHeight) sliderYTilePos = 0;
+        else if (sliderYTilePos < 0) sliderYTilePos = boardManager.boardHeight - 1;
+
+        Slider.TileLocation.Set(sliderXTilePos, sliderYTilePos);
+        ResetSliderPosition(isStart ? normal : normal *= -1);
     }
 }

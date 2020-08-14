@@ -7,19 +7,25 @@ public class InputManager
 {
     public InputMode InputMode { get; set; }
     public BlockManager blockManager { get; set; }
-    public IControllerInput ControllerInput { get; private set; }
+    public IControllerInput ControllerInput { get; set; }
+
+    public InputManager(BlockManager blockManager)
+    {
+        this.blockManager = blockManager;
+    }
 
     public IEnumerator HandleInput()
     {
+
         if (CheckInputUp())
         {
             blockManager.ConfirmMove();
             InputMode = InputMode.Wait;
         }
-        else if (CheckInputDown()) blockManager.CurrentMonster = blockManager.GetMonsterAtPosition(GetPointerPos());
+        else if (CheckInputDown()) blockManager.CurrentMonster = blockManager.Raycaster.GetMonsterAtPosition(GetPointerPos());
         else if (CheckInput() && blockManager.CurrentMonster != null) blockManager.DragSelectedBlocks();
 
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.001f);
     }
 
     public bool CheckInputUp() => ControllerInput.OnInputUp() 

@@ -6,11 +6,12 @@ using System.Runtime.InteropServices.WindowsRuntime;
 public class MonsterBlock : MonoBehaviour
 {
     [SerializeField] private float moveSpeed;
+    [SerializeField] private float destRange;
     [SerializeField] private Image image;
 
     public bool IsMatched { set; get; }
     public Vector2Int TileCoordinates { set; get; }
-    public MonsterType MonsterType { get; set; }
+    public MonsterType MonsterType { get; private set; }
     public Sprite Sprite
     {
         get => image.sprite;
@@ -20,8 +21,13 @@ public class MonsterBlock : MonoBehaviour
     private void Start()
     {
         IsMatched = false;
+    }
 
-        if(MonsterType != null)
+    public void SetMonsterType(MonsterType newType)
+    {
+        MonsterType = newType;
+        
+        if (MonsterType != null)
         {
             Sprite = MonsterType.Sprite;
         }
@@ -45,11 +51,14 @@ public class MonsterBlock : MonoBehaviour
 
     public bool CompareToMonster(MonsterBlock monster) => MonsterType.MatchID == monster.MonsterType.MatchID;
 
+    public bool HasReachedDest(Vector2 dest) => 
+        Vector2.Distance(transform.localPosition, dest) <= destRange;
+
     private IEnumerator MoveBlockToTile(BoardManager boardManager)
     {
         Vector2 dest = boardManager.Board.Tiles[TileCoordinates.x, TileCoordinates.y].Coordinates;
 
-        while (Vector2.Distance(transform.localPosition, dest) > 0.001f)
+        while (Vector2.Distance(transform.localPosition, dest) > destRange)
         {
             transform.localPosition = Vector3.Lerp(transform.localPosition, dest, moveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
