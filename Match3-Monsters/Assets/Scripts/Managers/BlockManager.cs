@@ -180,13 +180,7 @@ public class BlockManager
         int yStep = Mathf.RoundToInt(normal.y);
 
         if (isStart) parent.GetChild(parent.childCount - 1).SetAsFirstSibling();
-        else
-        {
-            xStep *= -1;
-            yStep *= -1;
-
-            parent.GetChild(0).SetAsLastSibling();
-        }
+        else parent.GetChild(0).SetAsLastSibling();
 
         float childXPos;
         float childYPos;
@@ -213,16 +207,6 @@ public class BlockManager
             child.localPosition = new Vector2(child.localPosition.x, childYPos);
         }
 
-        int sliderXTilePos = Mathf.RoundToInt(Slider.TileLocation.x + xStep);
-        int sliderYTilePos = Mathf.RoundToInt(Slider.TileLocation.y + yStep);
-
-        if (sliderXTilePos > boardManager.boardWidth) sliderXTilePos = 0;
-        else if (sliderXTilePos < 0) sliderXTilePos = boardManager.boardWidth - 1;
-
-        if (sliderYTilePos > boardManager.boardHeight) sliderYTilePos = 0;
-        else if (sliderYTilePos < 0) sliderYTilePos = boardManager.boardHeight - 1;
-
-        Slider.TileLocation.Set(sliderXTilePos, sliderYTilePos);
         ResetSliderPosition(isStart ? normal : normal *= -1);
     }
 }

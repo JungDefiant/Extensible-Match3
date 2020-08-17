@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private MonsterType[] allTypes;
 
     private bool gameStart = true;
+
     public MatchManager MatchManager { get; private set; }
     public BlockManager BlockManager { get; private set; }
     public InputManager InputManager { get; private set; }
@@ -28,7 +29,6 @@ public class GameManager : MonoBehaviour
         BoardManager.PopulateBoard();
 
         slider.Speed = sliderSpeed;
-        slider.TileLocation = new Vector2Int(0, 0);
 
         BlockManager = new BlockManager(BoardManager, canvas.GetComponent<GraphicRaycaster>(), slider, transform);
 
