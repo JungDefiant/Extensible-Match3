@@ -46,6 +46,7 @@ public class BlockManager
                 allMonsters[i] = match[i].Monster;
                 match[i].Monster = null;
                 allMonsters[i].SetTileCoordinates(middleTile.Coordinates);
+                allMonsters[i].StopAllCoroutines();
                 allMonsters[i].MoveBlockToTileCoord(boardManager);
             }
 
@@ -135,6 +136,7 @@ public class BlockManager
             {
                 MonsterBlock monster = child.GetComponent<MonsterBlock>();
                 monster.SetTileCoordinates(child.localPosition);
+                boardManager.Board.Tiles[monster.TileCoordinates.x, monster.TileCoordinates.y].Monster = monster;
                 child.SetParent(boardParent);
                 monster.MoveBlockToTileCoord(boardManager);
             }

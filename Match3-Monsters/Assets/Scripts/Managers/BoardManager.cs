@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Timeline;
@@ -52,9 +53,9 @@ public class BoardManager
                 Vector2 coords = VectorIntToCoords(tileCoord);
 
                 Board.Tiles[x, y] = new Tile(coords);
-                Board.Tiles[x, y].Monster = Object.Instantiate(MonsterPrefab, BoardParent);
+                Board.Tiles[x, y].Monster = UnityEngine.Object.Instantiate(MonsterPrefab, BoardParent);
                 Board.Tiles[x, y].Monster.SetPosition(coords);
-                MonsterType type = MonsterTypes[Random.Range(0, MonsterTypes.Length)];
+                MonsterType type = MonsterTypes[UnityEngine.Random.Range(0, MonsterTypes.Length)];
                 Board.Tiles[x, y].Monster.SetMonsterType(type);
             }
         }
@@ -62,7 +63,6 @@ public class BoardManager
 
     public IEnumerator RepopulateBoard()
     {
-        float ySpawnPos = boardStep * ((boardHeight / 2) + 1);
         Vector2Int tileCoord = new Vector2Int(0, 0);
 
         for (int x = 0; x < Board.Tiles.GetLength(0); x++)
@@ -74,11 +74,17 @@ public class BoardManager
                 {
                     tileCoord.Set(x, y);
                     Vector2 coords = VectorIntToCoords(tileCoord);
+                    Vector2 startPos = new Vector2(coords.x, boardStep * (boardHeight + 1));
 
-                    Board.Tiles[x, y].Monster = Object.Instantiate(MonsterPrefab, BoardParent);
-                    Board.Tiles[x, y].Monster.SetPosition(coords);
-                    MonsterType type = MonsterTypes[Random.Range(0, MonsterTypes.Length)];
+                    Debug.Log($"{startPos.x},{startPos.y}");
+
+                    Board.Tiles[x, y].Monster = UnityEngine.Object.Instantiate(MonsterPrefab, BoardParent);
+                    MonsterType type = MonsterTypes[UnityEngine.Random.Range(0, MonsterTypes.Length)];
+                    Board.Tiles[x, y].Monster.transform.position = startPos;
                     Board.Tiles[x, y].Monster.SetMonsterType(type);
+                    Board.Tiles[x, y].Monster.SetTileCoordinates(coords);
+                    Board.Tiles[x, y].Monster.StopAllCoroutines();
+                    Board.Tiles[x, y].Monster.MoveBlockToTileCoord(this);
                 }
             }
         }

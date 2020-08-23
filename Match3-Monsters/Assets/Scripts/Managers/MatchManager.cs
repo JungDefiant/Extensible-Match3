@@ -78,60 +78,6 @@ public class MatchManager
         }
     }
 
-    //private bool CollectMatchesDiagonal(Tile tile, Vector2Int tileLoc, List<Tile> match)
-    //{
-    //    Tile[] diagMatches = new Tile[boardManager.boardWidth ];
-    //    Tile nextTile;
-
-    //    diagMatches[0] = tile;
-
-    //    int index = 1;
-
-    //    for (int x = tileLoc.x + 1; x < boardManager.boardWidth; x++)
-    //    {
-    //        nextTile = board.Tiles[x, tileLoc.y];
-    //        if (!nextTile.Monster.IsMatched &&
-    //            tile.Monster.CompareToMonster(nextTile.Monster))
-    //        {
-    //            diagMatches[index] = nextTile;
-    //            nextTile.Monster.IsMatched = true;
-    //            index++;
-    //        }
-    //        else break;
-    //    }
-
-    //    for (int x = tileLoc.x - 1; x > 0; x--)
-    //    {
-    //        nextTile = board.Tiles[x, tileLoc.y];
-    //        if (!nextTile.Monster.IsMatched &&
-    //            tile.Monster.CompareToMonster(nextTile.Monster))
-    //        {
-    //            diagMatches[index] = nextTile;
-    //            nextTile.Monster.IsMatched = true;
-    //            index++;
-    //        }
-    //        else break;
-    //    }
-
-    //    diagMatches = diagMatches.Where(x => x != null)
-    //                             .ToArray();
-
-    //    if (diagMatches.Length < minMatch)
-    //    {
-    //        foreach (Tile t in diagMatches)
-    //        {
-    //            t.Monster.IsMatched = false;
-    //        }
-
-    //        return false;
-    //    }
-    //    else
-    //    {
-    //        match.AddRange(diagMatches);
-    //        return true;
-    //    }
-    //}
-
     private bool CollectMatchesHorizontal(Tile tile, Vector2Int tileLoc, List<Tile> match)
     {
         Tile[] horzMatches = new Tile[boardManager.boardWidth];
